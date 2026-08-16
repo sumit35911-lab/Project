@@ -51,7 +51,17 @@ app.use(
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
-// Health Check API
+// Root Welcome & Health Check API
+app.get('/', (req, res) => {
+  res.status(200).json({
+    name: 'NexusHub API Server',
+    status: 'online',
+    version: '1.0.0',
+    documentation: '/api/health',
+    timestamp: new Date(),
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
