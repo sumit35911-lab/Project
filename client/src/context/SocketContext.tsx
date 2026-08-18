@@ -35,19 +35,34 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       return;
     }
 
-    const socketUrl =
+    // Determine target WebSocket server URL
+    let socketUrl =
       import.meta.env.VITE_SOCKET_URL ||
       (window.location.origin.includes(':5173') ? 'http://localhost:5000' : window.location.origin);
 
+    // Remove any trailing slash to prevent malformed socket paths
+    socketUrl = socketUrl.replace(/\/+$/, '');
+
+    // Initialize Socket.io with polling-first handshake and automatic upgrade
     const socket = io(socketUrl, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1500,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+      autoConnect: true,
     });
 
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log('⚡ Connected to NexusHub WebSocket server');
+      console.log('⚡ Connected to NexusHub Realtime Server:', socketUrl);
       socket.emit('user:online', user._id);
+    });
+
+    socket.on('connect_error', (error) => {
+      console.warn('⚠️ Realtime connection attempt:', error.message);
     });
 
     // Listen for online users roster
